@@ -6,25 +6,31 @@ phases:
       - echo Logging in to Amazon ECR...
       - aws --version
       - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email) 
-      - REPOSITORY_URI=115502491259.dkr.ecr.us-west-1.amazonaws.com/madvisor_stg_spark
+      - REPOSITORY_URI_SPARK=115502491259.dkr.ecr.us-west-1.amazonaws.com/madvisor_stg_spark
+      - REPOSITORY_URI_API=115502491259.dkr.ecr.us-west-1.amazonaws.com/madvisor_stg_api
+      - REPOSITORY_URI_NGINX=115502491259.dkr.ecr.us-west-1.amazonaws.com/madvisor_stg_nginx
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-  build:
+      - IMAGE_TAG_SPARK=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - IMAGE_TAG_API=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - IMAGE_TAG_NGINX=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+
+      build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
       - sh apiCode.sh
       - cd SPARK_DOCKER
-      - docker build -t $REPOSITORY_URI:latest .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG 
+      - docker build -t $REPOSITORY_URI_SPARK:latest .
+      - docker tag $REPOSITORY_URI_SPARK:latest $REPOSITORY_URI_SPARK:$IMAGE_TAG_SPARK 
       - cd ..  
+      - sh -x copyApiFolder.sh & sh -x copyNginxFolder.sh 
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
       - echo Writing image definitions file...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG 
-      - printf '[{"name":"madvisor-spark","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG  > imagedefinitions.json
+      - docker push $REPOSITORY_URI_SPARK:$IMAGE_TAG_SPARK 
+      - printf '[{"name":"madvisor-spark","imageUri":"%s"}, {"name":"madvisor-api","imageUri":"%s"}, {"name":"madvisor-nginx","imageUri":"%s"}]' $REPOSITORY_URI_SPARK:$IMAGE_TAG_SPARK $REPOSITORY_URI_API:$IMAGE_TAG_API $REPOSITORY_URI_NGINX:$IMAGE_TAG_NGINX  > imagedefinitions.json
       - cat imagedefinitions.json 
 artifacts:
     files: imagedefinitions.json
