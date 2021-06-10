@@ -13,7 +13,6 @@ phases:
       - IMAGE_TAG_SPARK=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
       - IMAGE_TAG_API=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
       - IMAGE_TAG_NGINX=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-
   build:
     commands:
       - echo Build started on `date`
