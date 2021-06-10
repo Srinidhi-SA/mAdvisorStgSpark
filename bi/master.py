@@ -50,7 +50,7 @@ def main(configJson):
             debugMode = True
             ignoreMsg = True
             # Test Configs are defined in bi/settings/configs/localConfigs
-            jobType = "story"
+            jobType = "training"
             if jobType == "testCase":
                 configJson = get_test_configs(jobType,testFor = "chisquare")
             else:
@@ -102,6 +102,7 @@ def main(configJson):
     messages_for_API = messages.send_messages()
     messages_for_API = json.dumps(messages_for_API)
     res = requests.put(url=initialMessageURL,data=messages_for_API)
+    print("---------------------Pipeline changes in SPARK container------------------")
     try:
         errorURL = jobConfig["error_reporting_url"]
     except:

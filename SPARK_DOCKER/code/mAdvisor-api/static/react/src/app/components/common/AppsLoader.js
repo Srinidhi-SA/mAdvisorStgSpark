@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import {Link} from "react-router-dom";
 import store from "../../store";
 import {Modal,Button} from "react-bootstrap";
-import {openAppsLoaderValue,closeAppsLoaderValue,clearAppsIntervel,updateModelSummaryFlag,showCreateModalPopup,} from "../../actions/appActions";
+import {openAppsLoaderValue,closeAppsLoaderValue,clearAppsIntervel,updateModelSummaryFlag,showCreateModalPopup} from "../../actions/appActions";
 import {hideDataPreview} from "../../actions/dataActions";
 import {STATIC_URL} from "../../helpers/env";
 import {handleJobProcessing} from "../../helpers/helper";
@@ -14,7 +14,6 @@ import {handleJobProcessing} from "../../helpers/helper";
 		appsLoaderPerValue:store.apps.appsLoaderPerValue,
 		appsLoaderText:store.apps.appsLoaderText,
 		appsLoadedText:store.apps.appsLoadedText,
-		appsLoaderImage:store.apps.appsLoaderImage,
 		dataLoadedText:store.datasets.dataLoadedText,
 		currentAppId: store.apps.currentAppId,
 		modelSlug: store.apps.modelSlug,
@@ -122,7 +121,6 @@ export class AppsLoader extends React.Component {
 
   render() {
 		$('#text-carousel').carousel();
-		let img_src=STATIC_URL+store.getState().apps.appsLoaderImage;
 		var hideUrl = "";
 		if(store.getState().apps.currentAppDetails != null)
 			if(this.props.match && (this.props.match.url).indexOf("/createModel") > 0 || this.props.match && (this.props.match.url).indexOf("/createScore") > 0){
@@ -301,7 +299,7 @@ export class AppsLoader extends React.Component {
 
 				</div>
 
-				<img src={img_src} className="img-responsive"/>
+				<img src={`${STATIC_URL}assets/images/Processing_mAdvisor.gif`} className="img-responsive"/>
 
 				<div className="modal_stepsBlock xs-p-10">
 					<div className="row">
@@ -314,11 +312,6 @@ export class AppsLoader extends React.Component {
                                 </div>
                                 <div class="modal-steps" id="loadingMsgs2">
                                 </div>
-								{/* <ul class="modal-steps"> */}
-								{/*	<li>----</li>*/}
-									{/* <li class="active"></li> */}
-								{/*	<li>----</li>*/}
-								{/* </ul> */}
 
 						</div>
 						<div className="col-sm-3 text-center">
@@ -326,17 +319,6 @@ export class AppsLoader extends React.Component {
 				  	</div>
 					</div>
 					</div>
-
-
-
-
-
-				{/*store.getState().apps.appsLoaderPerValue >= 0 ?<div className="p_bar_body hidden">
-				<progress className="prg_bar" value={store.getState().apps.appsLoaderPerValue} max={95}></progress>
-				<div className="progress-value"><h3>{store.getState().apps.appsLoaderPerValue} %</h3></div>
-				</div>:""*/}
-
-
 			</div>
 
 
@@ -346,9 +328,7 @@ export class AppsLoader extends React.Component {
 		</Modal.Body>
 		<Modal.Footer>
                 <div>
-                  <Link to={this.props.match.url} style={{
-                    paddingRight: "10px"
-                  }} >
+                  <Link to={this.props.match.url} style={{paddingRight:10}} >
                     <Button onClick={this.cancelCreateModel.bind(this)}>Cancel</Button>
                   </Link>
                   <Link to={hideUrl} >
