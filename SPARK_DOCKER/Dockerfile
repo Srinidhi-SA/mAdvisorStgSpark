@@ -47,10 +47,10 @@ RUN pip3 install pyspark==2.4.0
 RUN pip3 install scipy
 RUN pip3 install pyenchant
 # RUN pip3 install sklearn2pmml
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt && pip3 install h5py==2.10.0
 
 #copy api code
-#ADD code /home/mAdvisor/
+ADD code /home/mAdvisor/
 #ADD code.tgz /home/mAdvisor
 WORKDIR /home/mAdvisor/mAdvisor-api/
 RUN mkdir hadoop_conf/
@@ -73,17 +73,14 @@ RUN mv mysql-connector-java-5.1.41.jar /usr/local/spark-2.4.0-bin-hadoop2.7/jars
 #copy spark startup script, conf file and egg file
 COPY startup.sh $SPARK_HOME/
 RUN apt-get update && apt-get install docker.io -y 
-WORKDIR /home/mAdvisor/mAdvisor-api/
-COPY marlabs_bi_jobs-0.0.0-py3.6.egg /home/mAdvisor/mAdvisor-api/scripts/
-RUN chmod +x $SPARK_HOME/startup.sh 
-RUN ls -l /home/mAdvisor/mAdvisor-api/scripts/
-RUN chmod +x /home/mAdvisor/mAdvisor-api/scripts/marlabs_bi_jobs-0.0.0-py3.6.egg
+COPY marlabs_bi_jobs-0.0.0-py3.6.egg /home/mAdvisor/mAdvisor-api/scripts 
+RUN chmod +x $SPARK_HOME/startup.sh && chmod +x /home/mAdvisor/mAdvisor-api/scripts/marlabs_bi_jobs-0.0.0-py3.6.egg
 EXPOSE 8080 4040 6379
 WORKDIR /home/mAdvisor/mAdvisor-api/
 RUN mkdir server_log
-#COPY lock.sh /home/mAsdvisor/mAdvisor-api/
+COPY lock.sh /home/mAdvisor/mAdvisor-api/
 COPY hadoop_conf/ /home/mAdvisor/mAdvisor-api/hadoop_conf/
-#RUN chmod +x /home/mAdvisor/mAdvisor-api/lock.sh
+RUN chmod +x /home/mAdvisor/mAdvisor-api/lock.sh
 
 #RUN chown marlabs:marlabs /home/mAdvisor/mAdvisor-api
 #RUN chown marlabs:marlabs /usr/local/spark-2.3.0-bin-hadoop2.7/startup.sh
@@ -102,8 +99,8 @@ RUN pip install fabric3
 RUN apt-get install curl -y
 RUN apt-get install python3-tk -y
 RUN pip3 install scipy==1.2.3
-#COPY celery_reload.sh /home/mAdvisor/mAdvisor-api/
-#RUN chmod +x /home/mAdvisor/mAdvisor-api/celery_reload.sh
+COPY celery_reload.sh /home/mAdvisor/mAdvisor-api/
+RUN chmod +x /home/mAdvisor/mAdvisor-api/celery_reload.sh
 RUN pip3 install json2xml
 RUN pip3 install Shapely
 RUN apt-get update 

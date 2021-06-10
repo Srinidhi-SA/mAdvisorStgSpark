@@ -821,6 +821,7 @@ class StockAdvisor(object):
                 regressionDf = masterDfDict[current_stock]
                 regressionDf.set_index('time', inplace=True)
                 remaining_stocks = list(set(self._stockNameList) - {current_stock})
+                print(current_stock)
                 # if len(remaining_stocks) > 0:
                 #     for other_stock in remaining_stocks:
                 #         colsToConsider = ["time","overallSentiment","close"]
@@ -835,6 +836,8 @@ class StockAdvisor(object):
                 regressionCoeff = self.run_regression(regressionDf,"close"+"_"+current_stock)
                 if 'Intercept' in regressionCoeff: del regressionCoeff['Intercept']
                 regCoeffArray = sorted([{"key":k,"value":v} for k,v in list(regressionCoeff.items())],key=lambda x:abs(x["value"]),reverse=True)
+                regCoeffArray = [i for i in regCoeffArray if i['value'] != 0.0]
+                print(regCoeffArray)
                 stockDict[current_stock]["regCoefficient"] = regCoeffArray
                 # print current_stock , " : regCoeffArray : ", regCoeffArray
                 working_stock_list.append(current_stock)

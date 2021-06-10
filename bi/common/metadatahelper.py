@@ -257,7 +257,10 @@ class MetaDataHelper(object):
                 summary_df.drop(index=["25%", "50%", "75%"], inplace=True)
                 summary_df.rename(index={'std': 'stddev'}, inplace=True)
                 summary_df=summary_df.reset_index()
-                summary_df.rename(columns={'index': 'summary'}, inplace=True)
+                if 'level_0' in list(summary_df.columns):
+                    summary_df.rename(columns={'level_0': 'summary'}, inplace=True)
+                else:
+                    summary_df.rename(columns={'index': 'summary'}, inplace=True)
             else:
                 summary_df = None
         else:

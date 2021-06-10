@@ -102,9 +102,8 @@ class ChiSquare(object):
         for m in all_measures:
             try:
                 if self._pandas_flag :
-                    if len(self._data_frame[m].unique())>self._analysisDict['Dimension vs. Dimension']['binSetting']['binCardinality']:
-                        chisquare_result = self.test_measures(targetDimension, m)
-                        df_chisquare_result.add_chisquare_result(targetDimension, m, chisquare_result)
+                    chisquare_result = self.test_measures(targetDimension, m)
+                    df_chisquare_result.add_chisquare_result(targetDimension, m, chisquare_result)
                 else:
                     if self._data_frame.select(F.countDistinct(m)).collect()[0][0]>self._analysisDict['Dimension vs. Dimension']['binSetting']['binCardinality']:
                         chisquare_result = self.test_measures(targetDimension, m)

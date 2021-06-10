@@ -573,6 +573,8 @@ class DecisionTrees(object):
         print("="*200)
         if self._pandas_flag:
             self._data_frame.columns=[re.sub('\W+','_', col.strip()) for col in self._data_frame.columns]
+            self._data_frame = self._data_frame.T.drop_duplicates().T
+            self._data_frame = self._data_frame.groupby(level=0, axis=1).sum()
             x = self._data_frame.drop(dimension,axis=1)
             y = self._data_frame[dimension]
             #tle = LabelEncoder()

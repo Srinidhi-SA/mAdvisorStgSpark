@@ -1763,7 +1763,13 @@ def collated_model_summary_card(result_setter, prediction_narrative, appType, ap
                                 elif key == "Algorithm Name":
                                     row.append(obj["name"])
                                 elif key == "Optimization Method":
-                                    row.append("Grid Search")
+                                    if "hyperparamalgoname" in obj.keys():
+                                        if obj["hyperparamalgoname"] == 'randomsearchcv':
+                                            row.append('Random Search')
+                                        elif obj["hyperparamalgoname"] == 'gridsearchcv':
+                                            row.append("Grid Search")
+                                    else:
+                                        row.append("Grid Search")
                                 elif key == "Metric":
                                     row.append(rowDict["comparisonMetricUsed"])
                                 else:
@@ -2546,6 +2552,7 @@ def stock_sense_individual_stock_cards(stockDict):
         sentimentNdArticlesByConcept_get_data = sentimentNdArticlesByConcept.get_data()
         for i in sentimentNdArticlesByConcept_get_data:
             i["avgSentiment"] = round(i["avgSentiment"], 2)
+        sentimentNdArticlesByConcept_get_data = [i for i in sentimentNdArticlesByConcept_get_data if i['articles']!=0]
         chart_json.set_data(sentimentNdArticlesByConcept_get_data)
         chart_json.set_chart_type("combination")
         chart_json.set_axes({"x":"concept","y":"articles","y2":"avgSentiment"})

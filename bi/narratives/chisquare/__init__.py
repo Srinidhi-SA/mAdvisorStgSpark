@@ -128,13 +128,13 @@ class ChiSquareNarratives(object):
                 },
             }
         CommonUtils.create_update_and_save_progress_message(self._dataframe_context,self._scriptWeightDict,self._scriptStages,self._analysisName,"initialization","info",display=False,weightKey="narratives")
-        self.new_effect_size,self.signi_dict = self.feat_imp_threshold(target_dimension)
+        self.new_effect_size,self.signi_dict,self.actual_cols = self.feat_imp_threshold(target_dimension)
         self._generate_narratives()
 
         CommonUtils.create_update_and_save_progress_message(self._dataframe_context,self._scriptWeightDict,self._scriptStages,self._analysisName,"summarygeneration","info",display=False,weightKey="narratives")
 
         CommonUtils.create_update_and_save_progress_message(self._dataframe_context,self._scriptWeightDict,self._scriptStages,self._analysisName,"completion","info",display=False,weightKey="narratives")
-    def feat_imp_threshold(self,target_dimension,dummy_Cols = True,label_encoding= False):
+    def feat_imp_threshold(self,target_dimension):
         if self._pandas_flag:
             if is_numeric_dtype(self._data_frame[target_dimension[0]]):
                 self.app_type = 'regression'
@@ -157,26 +157,42 @@ class ChiSquareNarratives(object):
         except Exception as e:
             CommonUtils.print_errors_and_store_traceback(self.LOGGER, "dataPreprocessing", e)
             CommonUtils.save_error_messages(self.errorURL, self.app_type, e, ignore=self.ignoreMsg)
-        preprocess_df = DataPreprocessingAutoML_obj.data_frame
+       #preprocess_df = DataPreprocessingAutoML_obj.data_frame
         FeatureEngineeringAutoML_obj = FeatureEngineeringAutoML(DataPreprocessingAutoML_obj.data_frame, DataPreprocessingAutoML_obj.target, DataPreprocessingAutoML_obj.data_change_dict, DataPreprocessingAutoML_obj.numeric_cols, DataPreprocessingAutoML_obj.dimension_cols, DataPreprocessingAutoML_obj.datetime_cols, DataPreprocessingAutoML_obj.problem_type,self._pandas_flag)
-        if FeatureEngineeringAutoML_obj.datetime_cols != 0:
-            FeatureEngineeringAutoML_obj.date_column_split(FeatureEngineeringAutoML_obj.datetime_cols)
-        if dummy_Cols:
-            if self._pandas_flag:
-                FeatureEngineeringAutoML_obj.sk_one_hot_encoding(FeatureEngineeringAutoML_obj.dimension_cols)
-                clean_df = FeatureEngineeringAutoML_obj.data_frame
-            else:
-                FeatureEngineeringAutoML_obj.pyspark_one_hot_encoding(FeatureEngineeringAutoML_obj.dimension_cols)
-                clean_df = FeatureEngineeringAutoML_obj.data_frame
-        if label_encoding:
-            if self._pandas_flag:
-                for column_name in FeatureEngineeringAutoML_obj.dimension_cols:
-                    preprocess_df[column_name + '_label_encoded'] = LabelEncoder().fit_transform(preprocess_df[column_name])
-                    preprocess_df = preprocess_df.drop(column_name,1)
-                clean_df = preprocess_df
-            else:
-                FeatureEngineeringAutoML_obj.pyspark_label_encoding(FeatureEngineeringAutoML_obj.dimension_cols)
-                clean_df = FeatureEngineeringAutoML_obj.data_frame
+        #if FeatureEngineeringAutoML_obj.datetime_cols != 0:
+        #    FeatureEngineeringAutoML_obj.date_column_split(FeatureEngineeringAutoML_obj.datetime_cols)
+        if FeatureEngineeringAutoML_obj.dimension_cols != []:
+            onehot_list = []
+            label_list = []
+            for col in FeatureEngineeringAutoML_obj.dimension_cols:
+                if self._pandas_flag:
+                    if FeatureEngineeringAutoML_obj.data_frame[col].nunique() < 10:
+                        onehot_list.append(col)
+                    else:
+                        label_list.append(col)
+                else:
+                    if FeatureEngineeringAutoML_obj.data_frame.select(col).distinct().count() < 10:
+                        onehot_list.append(col)
+                    else:
+                        label_list.append(col)
+            if onehot_list != []:
+                if self._pandas_flag:
+                    FeatureEngineeringAutoML_obj.sk_one_hot_encoding(onehot_list)
+                    clean_df = FeatureEngineeringAutoML_obj.data_frame
+                else:
+                    FeatureEngineeringAutoML_obj.pyspark_one_hot_encoding(onehot_list)
+                    clean_df = FeatureEngineeringAutoML_obj.data_frame
+            if label_list != []:
+                if self._pandas_flag:
+                    for column_name in label_list:
+                        clean_df[column_name + '_label_encoded'] = LabelEncoder().fit_transform(clean_df[column_name])
+                        clean_df = clean_df.drop(column_name,1)
+                    clean_df = clean_df
+                else:
+                    FeatureEngineeringAutoML_obj.pyspark_label_encoding(label_list)
+                    clean_df = FeatureEngineeringAutoML_obj.data_frame
+        else:
+            clean_df = FeatureEngineeringAutoML_obj.data_frame
         if self._pandas_flag:
             ind_var = clean_df.drop(target_dimension[0],1)
             ind_var = ind_var[ind_var._get_numeric_data().columns]
@@ -222,14 +238,17 @@ class ChiSquareNarratives(object):
         else:
             cat_var = [col[0] for col in self._data_frame.dtypes if col[1]=='string']
         cat_var.remove(target_dimension[0])
-        si_var_dict = {key:value for key,value in sort_dict.items() if key in cat_var}
+        si_var_dict = {key:value for key,value in sort_dict.items()}
         threshold = 0
         si_var_thresh = {}
         for key,value in si_var_dict.items():
             threshold = threshold + value
-            if threshold < 0.8:
+            if value < 0.8:
+                if threshold < 0.8:
+                    si_var_thresh[key] = value
+            else:
                 si_var_thresh[key] = value
-        return feat_imp_dict,si_var_thresh
+        return feat_imp_dict,si_var_thresh,actual_cols
 
 
     def _generate_narratives(self):
@@ -240,21 +259,28 @@ class ChiSquareNarratives(object):
             target_chisquare_result = self._df_chisquare_result[target_dimension]
             analysed_variables = list(target_chisquare_result.keys())  ## List of all analyzed var.
             # List of significant var out of analyzed var.
-            # significant_variables = [dim for dim in list(target_chisquare_result.keys()) if target_chisquare_result[dim].get_pvalue()<=0.05]
+            #significant_variables = [dim for dim in list(target_chisquare_result.keys()) if target_chisquare_result[dim].get_pvalue()<=0.05]
+            # significant_variables = [dim for dim in list(target_chisquare_result.keys())]
+            # print(significant_variables,'significant_variables')
+            # effect_sizes = [target_chisquare_result[dim].get_effect_size() for dim in significant_variables]
+            # effect_size_dict = dict(list(zip(significant_variables,effect_sizes)))
             effect_size_dict = self.new_effect_size
             significant_variables = list(self.signi_dict.keys())
             effect_sizes = list(self.signi_dict.values())
+            # significant_variables = [y for (x,y) in sorted(zip(effect_sizes,significant_variables) ,reverse=True) if round(float(x),2)>0]
             significant_variables = [y for (x,y) in sorted(zip(effect_sizes,significant_variables) ,reverse=True) if round(float(x),2)>0]
             #insignificant_variables = [i for i in self._df_chisquare_result[target_dimension] if i['pv']>0.05]
-
-            num_analysed_variables = len(analysed_variables)
+            df_cols = self.actual_cols
+            if 'bucketedColumn' in df_cols:
+                df_cols.remove('bucketedColumn')
+            num_analysed_variables = len(df_cols)
             num_significant_variables = len(significant_variables)
             self.narratives['main_card']= {}
             self.narratives['main_card']['heading'] = 'Relationship between '+target_dimension+' and other factors'
             self.narratives['main_card']['paragraphs'] = {}
             data_dict = {
                           'num_variables' : num_analysed_variables,
-                          'num_significant_variables' : num_significant_variables,
+                          'num_significant_variables' : len(significant_variables),
                           'significant_variables' : significant_variables,
                           'target' : target_dimension,
                           'analysed_dimensions': analysed_variables,

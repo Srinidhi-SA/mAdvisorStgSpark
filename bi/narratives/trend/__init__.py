@@ -310,7 +310,7 @@ class TimeSeriesNarrative(object):
                         card1chartdata = ScatterChartData(data=card1chartdata)
                         chartJson = ChartJson()
                         chartJson.set_data(card1chartdata.get_data())
-                        chartJson.set_label_text({'x':' ','y': 'No. of Observations'})
+                        chartJson.set_label_text({'x':'Time Line','y': 'No. of Observations'})
                         chartJson.set_legend({"actual":"Observed","predicted":"Forecast"})
                         chartJson.set_chart_type("scatter_line")
                         chartJson.set_axes({"x":"key","y":"value"})
@@ -537,10 +537,11 @@ class TimeSeriesNarrative(object):
                     for idx in range(len(chart_data[top2levels[0]])):
                         key = chart_data[top2levels[0]][idx]["key"]
                         value = chart_data[top2levels[0]][idx]["value"]
-                        try:
-                            value1 = chart_data[top2levels[1]][idx]["value"]
-                        except:
-                            value1 = 0
+                        if key in [d["key"] for d in chart_data[top2levels[1]] if "key" in d]:
+                            val = [list(d.values())[1] for d in chart_data[top2levels[1]] if key in list(d.values())]
+                            value1 = val[0]
+                        else:
+                            value1 = 0.0
                         multiLineData.append({"key":key,top2levels[0]:value,top2levels[1]:value1})
                     chartData = NormalChartData(multiLineData)
                     chartJson = ChartJson()

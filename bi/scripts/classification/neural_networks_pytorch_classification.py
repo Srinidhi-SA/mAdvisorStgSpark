@@ -770,6 +770,7 @@ class NNPTClassificationScript(object):
             if result_column in df.columns:
                 df.drop(result_column, axis=1, inplace=True)
             df = df.rename(index=str, columns={"predicted_class": result_column})
+            df = df.round({'predicted_probability':2})
             df.to_csv(score_data_path,header=True,index=False)
             uidCol = self._dataframe_context.get_uid_column()
             if uidCol == None:
@@ -826,6 +827,8 @@ class NNPTClassificationScript(object):
                 columns_to_drop = list(set(df.columns)-set(columns_to_keep))
             else:
                 columns_to_drop += ["predicted_probability"]
+            if set(columns_to_drop) == set(df.columns):
+                columns_to_drop = ["predicted_probability"]
             columns_to_drop = [x for x in columns_to_drop if x in df.columns and x != result_column]
             df.drop(columns_to_drop, axis=1, inplace=True)
             # # Dropping predicted_probability column

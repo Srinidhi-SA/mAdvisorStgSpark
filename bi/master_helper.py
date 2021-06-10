@@ -1132,6 +1132,24 @@ def score_model_autoML(spark,linear_df,tree_df,dataframe_context,df_helper_linea
                 CommonUtils.save_error_messages(errorURL,APP_NAME,e,ignore=ignoreMsg)
             print("Scoring Done in ", time.time() - st,  " seconds.")
 
+        if "Neural Network (TensorFlow)" in selected_model_for_prediction:
+            trainedModel = TensorFlowRegScript(tree_df, df_helper_tree_df, dataframe_context, spark, story_narrative, result_setter, metaParserInstance_tree_df,mlEnvironment)
+            try:
+                trainedModel.Predict()
+            except Exception as e:
+                CommonUtils.print_errors_and_store_traceback(LOGGER,"Neural Network (TensorFlow)",e)
+                CommonUtils.save_error_messages(errorURL,APP_NAME,e,ignore=ignoreMsg)
+            print("Scoring Done in ", time.time() - st,  " seconds.")
+
+        if "Neural Network (PyTorch)" in selected_model_for_prediction:
+            trainedModel = NNPTRegressionScript(tree_df, df_helper_tree_df, dataframe_context, spark, story_narrative,result_setter,metaParserInstance_tree_df,mlEnvironment)
+            try:
+                trainedModel.Predict()
+            except Exception as e:
+                CommonUtils.print_errors_and_store_traceback(LOGGER,"Neural Network (PyTorch)",e)
+                CommonUtils.save_error_messages(errorURL,APP_NAME,e,ignore=ignoreMsg)
+            print("Scoring Done in ", time.time() - st,  " seconds.")
+
         headNode = NarrativesTree()
         if headNode != None:
             headNode.set_name(jobName)

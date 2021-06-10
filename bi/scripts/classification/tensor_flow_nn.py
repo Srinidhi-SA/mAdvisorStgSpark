@@ -781,6 +781,7 @@ class TensorFlowScript(object):
         if result_column in df.columns:
             df.drop(result_column, axis=1, inplace=True)
         df = df.rename(index=str, columns={"predicted_class": result_column})
+        df = df.round({'predicted_probability':2})
         df.to_csv(score_data_path,header=True,index=False)
         uidCol = self._dataframe_context.get_uid_column()
         if uidCol == None:
