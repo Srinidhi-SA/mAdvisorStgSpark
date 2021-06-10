@@ -14,7 +14,7 @@ phases:
       - IMAGE_TAG_API=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
       - IMAGE_TAG_NGINX=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
 
-      build:
+  build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
