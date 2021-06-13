@@ -18,11 +18,11 @@ phases:
       - echo Build started on `date`
       - echo Building the Docker image...
       - sh apiCode.sh
+      - sh -x copyApiFolder.sh & sh -x copyNginxFolder.sh 
       - cd SPARK_DOCKER
       - docker build -t $REPOSITORY_URI_SPARK:latest .
       - docker tag $REPOSITORY_URI_SPARK:latest $REPOSITORY_URI_SPARK:$IMAGE_TAG_SPARK 
       - cd ..  
-      - sh -x copyApiFolder.sh & sh -x copyNginxFolder.sh 
   post_build:
     commands:
       - echo Build completed on `date`
